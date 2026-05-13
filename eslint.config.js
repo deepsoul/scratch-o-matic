@@ -4,6 +4,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import pluginVue from 'eslint-plugin-vue'
 import tseslint from 'typescript-eslint'
 import vueParser from 'vue-eslint-parser'
+import globals from 'globals'
 
 export default tseslint.config(
   { ignores: ['dist', 'coverage', 'node_modules'] },
@@ -15,10 +16,38 @@ export default tseslint.config(
   {
     files: ['**/*.{ts,vue}'],
     languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+      },
       parser: vueParser,
       parserOptions: {
         parser: tseslint.parser,
         extraFileExtensions: ['.vue'],
+      },
+    },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'vue/require-default-prop': 'off',
+    },
+  },
+  {
+    files: ['tests/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs', '*.config.js', 'eslint.config.js', 'vite.config.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
       },
     },
   },

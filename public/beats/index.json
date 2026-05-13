@@ -1,0 +1,41 @@
+{
+  "notes": "TODO: echte Beats vom User produziert einfügen",
+  "beats": [
+    {
+      "id": "stub-90",
+      "title": "Placeholder 90",
+      "bpm": 90,
+      "key": "C",
+      "file": "stub-90.wav",
+      "cover": "cover-placeholder.svg",
+      "length": 2.6666666666666665
+    },
+    {
+      "id": "stub-100",
+      "title": "Placeholder 100",
+      "bpm": 100,
+      "key": "D",
+      "file": "stub-100.wav",
+      "cover": "cover-placeholder.svg",
+      "length": 2.4
+    },
+    {
+      "id": "stub-110",
+      "title": "Placeholder 110",
+      "bpm": 110,
+      "key": "E",
+      "file": "stub-110.wav",
+      "cover": "cover-placeholder.svg",
+      "length": 2.1818181818181817
+    },
+    {
+      "id": "stub-120",
+      "title": "Placeholder 120",
+      "bpm": 120,
+      "key": "F",
+      "file": "stub-120.wav",
+      "cover": "cover-placeholder.svg",
+      "length": 2
+    }
+  ]
+}
