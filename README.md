@@ -23,7 +23,7 @@ node scripts/gen-placeholder-beats.mjs
 
 ## Environment (Firebase)
 
-Copy `.env.example` to `.env.local`. When `VITE_USE_FIREBASE=true` and all `VITE_FIREBASE_*` variables are set, Google sign-in and optional mix upload to Storage + a `mixes` Firestore document are enabled. Without that, the app stays local; signing in may surface a **migration** affordance if IndexedDB keys exist.
+Copy [`.env.example`](.env.example) to **`.env.local`** and set real values there. That file is gitignored (`*.local`). Never commit API keys. Optional: `VITE_FIREBASE_MEASUREMENT_ID` for Analytics-linked projects.
 
 ## Vercel
 

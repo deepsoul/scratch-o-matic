@@ -1,4 +1,4 @@
-import { initializeApp, type FirebaseApp } from 'firebase/app'
+import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app'
 import {
   getAuth,
   GoogleAuthProvider,
@@ -40,14 +40,18 @@ export function getFirebaseOrNull(): {
   if (app && auth && db && storage) return { app, auth, db, storage }
 
   const e = import.meta.env
-  app = initializeApp({
+  const options: FirebaseOptions = {
     apiKey: e.VITE_FIREBASE_API_KEY,
     authDomain: e.VITE_FIREBASE_AUTH_DOMAIN,
     projectId: e.VITE_FIREBASE_PROJECT_ID,
     storageBucket: e.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: e.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: e.VITE_FIREBASE_APP_ID,
-  })
+  }
+  if (e.VITE_FIREBASE_MEASUREMENT_ID) {
+    options.measurementId = e.VITE_FIREBASE_MEASUREMENT_ID
+  }
+  app = initializeApp(options)
   auth = getAuth(app)
   db = getFirestore(app)
   storage = getStorage(app)
