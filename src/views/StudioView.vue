@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useAudioContext } from '@/composables/useAudioContext'
 import { bufferToPeaks } from '@/composables/useWaveform'
+import { useFitPxPerSec } from '@/composables/useWaveformZoom'
 import { useBeatsStore } from '@/stores/beats'
 import { useCuesStore } from '@/stores/cues'
 import { useMixStore } from '@/stores/mix'
@@ -48,7 +49,12 @@ const scratchGain = shallowRef<GainNode | null>(null)
 
 const beatTime = ref(0)
 const sampleTime = ref(0)
+const beatDuration = computed(() => beatBuffer.value?.duration)
+const sampleDuration = computed(() => sampleBuffer.value?.duration)
+const beatPxPerSec = useFitPxPerSec(beatDuration)
+const samplePxPerSec = useFitPxPerSec(sampleDuration)
 let raf = 0
+let beatLoadGen = 0
 
 const lastScratchNorm = ref(0)
 const manualScratching = ref(false)
@@ -65,9 +71,12 @@ function equalPower(cf: number) {
 }
 
 function applyCrossfade() {
+  const audioCtx = ctx.value
+  if (!audioCtx) return
   const { gBeat, gSample } = equalPower(crossfader.value)
-  if (beatGain.value) beatGain.value.gain.setTargetAtTime(gBeat, ctx.value!.currentTime, 0.02)
-  if (sampleGain.value) sampleGain.value.gain.setTargetAtTime(gSample, ctx.value!.currentTime, 0.02)
+  const t = audioCtx.currentTime
+  if (beatGain.value) beatGain.value.gain.setTargetAtTime(gBeat, t, 0.02)
+  if (sampleGain.value) sampleGain.value.gain.setTargetAtTime(gSample, t, 0.02)
 }
 
 async function initGraph() {
@@ -97,15 +106,33 @@ async function initGraph() {
 }
 
 function tick() {
-  if (beatPlayer.value?.isPlaying()) beatTime.value = beatPlayer.value.getCursorTime()
-  if (samplePlayer.value?.isPlaying()) sampleTime.value = samplePlayer.value.getCursorTime()
+  const beatPlaying = beatPlayer.value?.isPlaying() ?? false
+  const samplePlaying = samplePlayer.value?.isPlaying() ?? false
+  if (beatPlaying) beatTime.value = beatPlayer.value!.getCursorTime()
+  if (samplePlaying) sampleTime.value = samplePlayer.value!.getCursorTime()
+  if (beatPlaying || samplePlaying) {
+    raf = requestAnimationFrame(tick)
+  } else {
+    raf = 0
+  }
+}
+
+function startTransportLoop() {
+  if (raf) return
   raf = requestAnimationFrame(tick)
+}
+
+function stopTransportLoop() {
+  if (raf) {
+    cancelAnimationFrame(raf)
+    raf = 0
+  }
 }
 
 watch(
   () => sampleBuffer.value,
   async (buf) => {
-    await initGraph()
+    if (buf) await initGraph()
     if (!buf) {
       samplePeaks.value = new Float32Array(0)
       samplePlayer.value?.stop()
@@ -113,6 +140,8 @@ watch(
       scratchEngine.value = null
       return
     }
+    sampleTime.value = 0
+    mix.sampleIsPlaying = false
     samplePeaks.value = bufferToPeaks(buf)
     samplePlayer.value?.setBuffer(buf)
     const c = ensureContext()
@@ -127,33 +156,47 @@ watch(
   { immediate: true },
 )
 
-watch(
-  () => [selectedBeatId.value, beats.items] as const,
-  async () => {
-    await initGraph()
-    const id = selectedBeatId.value
-    if (!id) {
+async function loadBeatById(id: string | null) {
+  const gen = ++beatLoadGen
+  beatPlayer.value?.stop()
+  mix.beatIsPlaying = false
+  stopTransportLoop()
+  beatTime.value = 0
+
+  if (!id) {
+    beatBuffer.value = null
+    beatPeaks.value = new Float32Array(0)
+    return
+  }
+
+  if (!beats.items.length) await beats.loadManifest()
+  const meta = beats.items.find((b) => b.id === id)
+  if (!meta) return
+
+  try {
+    const c = ensureContext()
+    const base = import.meta.env.BASE_URL.replace(/\/?$/, '/')
+    const res = await fetch(`${base}beats/${meta.file}`)
+    if (!res.ok) throw new Error(`Beat fetch ${res.status}`)
+    const ab = await res.arrayBuffer()
+    if (gen !== beatLoadGen) return
+    const decoded = await c.decodeAudioData(ab.slice(0))
+    if (gen !== beatLoadGen) return
+    beatBuffer.value = decoded
+    beatPeaks.value = bufferToPeaks(decoded)
+    beatPlayer.value?.setBuffer(decoded)
+    beatTime.value = 0
+  } catch {
+    if (gen === beatLoadGen) {
       beatBuffer.value = null
       beatPeaks.value = new Float32Array(0)
-      return
     }
-    const meta = beats.items.find((b) => b.id === id)
-    if (!meta) return
-    try {
-      const c = ensureContext()
-      const base = import.meta.env.BASE_URL.replace(/\/?$/, '/')
-      const res = await fetch(`${base}beats/${meta.file}`)
-      const ab = await res.arrayBuffer()
-      const decoded = await c.decodeAudioData(ab.slice(0))
-      beatBuffer.value = decoded
-      beatPeaks.value = bufferToPeaks(decoded)
-      beatPlayer.value?.setBuffer(decoded)
-    } catch {
-      beatBuffer.value = null
-    }
-  },
-  { immediate: true },
-)
+  }
+}
+
+watch(selectedBeatId, (id) => {
+  void loadBeatById(id)
+})
 
 watch(crossfader, () => applyCrossfade())
 
@@ -197,10 +240,12 @@ function toggleBeat() {
   if (beatPlayer.value.isPlaying()) {
     beatPlayer.value.stop()
     mix.beatIsPlaying = false
+    if (!samplePlayer.value?.isPlaying()) stopTransportLoop()
   } else {
     beatPlayer.value.loop = mix.beatLoop
     beatPlayer.value.play(mix.beatPlaybackRate)
     mix.beatIsPlaying = true
+    startTransportLoop()
   }
 }
 
@@ -210,10 +255,12 @@ function toggleSample() {
   if (samplePlayer.value.isPlaying()) {
     samplePlayer.value.stop()
     mix.sampleIsPlaying = false
+    if (!beatPlayer.value?.isPlaying()) stopTransportLoop()
   } else {
     samplePlayer.value.loop = mix.sampleLoop
     samplePlayer.value.play(mix.samplePlaybackRate)
     mix.sampleIsPlaying = true
+    startTransportLoop()
   }
 }
 
@@ -265,6 +312,7 @@ function scheduleAutoScratch() {
     beatPlayer.value.loop = mix.beatLoop
     beatPlayer.value.play(mix.beatPlaybackRate)
     mix.beatIsPlaying = true
+    startTransportLoop()
   }
   autoStartCtx = ensureContext().currentTime
 
@@ -373,24 +421,17 @@ function fireCue(index: number) {
   })
 }
 
+onMounted(() => {
+  void loadBeatById(selectedBeatId.value)
+})
+
 onUnmounted(() => {
-  cancelAnimationFrame(raf)
+  stopTransportLoop()
   stopAutoScratch()
   beatPlayer.value?.stop()
   samplePlayer.value?.stop()
   scratchEngine.value?.stop()
 })
-
-watch(
-  ctx,
-  (c) => {
-    if (c) {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(tick)
-    }
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -445,6 +486,8 @@ watch(
         :peaks="beatPeaks"
         :duration="beatBuffer?.duration ?? 0.001"
         :current-time="beatTime"
+        :follow-playhead="mix.beatIsPlaying"
+        :min-px-per-sec="beatPxPerSec"
         :is-playing="mix.beatIsPlaying"
         :loop="mix.beatLoop"
         :pitch-percent="mix.beatPitchPercent"
@@ -471,6 +514,8 @@ watch(
         :peaks="samplePeaks"
         :duration="sampleBuffer?.duration ?? 0.001"
         :current-time="sampleTime"
+        :follow-playhead="mix.sampleIsPlaying"
+        :min-px-per-sec="samplePxPerSec"
         :is-playing="mix.sampleIsPlaying"
         :loop="mix.sampleLoop"
         :pitch-percent="mix.samplePitchPercent"

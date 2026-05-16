@@ -15,7 +15,9 @@ export class SimpleBufferPlayer {
   }
 
   setBuffer(buffer: AudioBuffer) {
+    this.stop()
     this.buffer = buffer
+    this.startOffset = 0
   }
 
   isPlaying(): boolean {

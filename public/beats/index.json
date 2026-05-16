@@ -1,41 +1,104 @@
 {
-  "notes": "TODO: echte Beats vom User produziert einfügen",
+  "notes": "Echte Beats aus public/beats/. BPM und Key sind Platzhalter (120 / —) — bei Bedarf pro Track anpassen.",
   "beats": [
     {
-      "id": "stub-90",
-      "title": "Placeholder 90",
-      "bpm": 90,
-      "key": "C",
-      "file": "stub-90.wav",
-      "cover": "cover-placeholder.svg",
-      "length": 2.6666666666666665
-    },
-    {
-      "id": "stub-100",
-      "title": "Placeholder 100",
-      "bpm": 100,
-      "key": "D",
-      "file": "stub-100.wav",
-      "cover": "cover-placeholder.svg",
-      "length": 2.4
-    },
-    {
-      "id": "stub-110",
-      "title": "Placeholder 110",
-      "bpm": 110,
-      "key": "E",
-      "file": "stub-110.wav",
-      "cover": "cover-placeholder.svg",
-      "length": 2.1818181818181817
-    },
-    {
-      "id": "stub-120",
-      "title": "Placeholder 120",
+      "id": "loop-1",
+      "title": "Loop 1",
       "bpm": 120,
-      "key": "F",
-      "file": "stub-120.wav",
+      "key": "—",
+      "file": "loop-1.mp3",
       "cover": "cover-placeholder.svg",
-      "length": 2
+      "length": 59.83
+    },
+    {
+      "id": "loop-1a",
+      "title": "Loop 1A",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-1a.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 66.07
+    },
+    {
+      "id": "loop-1c",
+      "title": "Loop 1C",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-1c.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 479.42
+    },
+    {
+      "id": "loop-1d",
+      "title": "Loop 1D",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-1d.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 64.92
+    },
+    {
+      "id": "loop-2",
+      "title": "Loop 2",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-2.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 80.71
+    },
+    {
+      "id": "loop-2a",
+      "title": "Loop 2A",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-2a.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 74.18
+    },
+    {
+      "id": "loop-2b",
+      "title": "Loop 2B",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-2b.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 119.42
+    },
+    {
+      "id": "loop-3",
+      "title": "Loop 3",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-3.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 36.67
+    },
+    {
+      "id": "loop-3a",
+      "title": "Loop 3A",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-3a.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 87.48
+    },
+    {
+      "id": "loop-3b",
+      "title": "Loop 3B",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-3b.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 35.88
+    },
+    {
+      "id": "loop-3c",
+      "title": "Loop 3C",
+      "bpm": 120,
+      "key": "—",
+      "file": "loop-3c.mp3",
+      "cover": "cover-placeholder.svg",
+      "length": 48.5
     }
   ]
 }

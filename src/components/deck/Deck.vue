@@ -16,8 +16,11 @@ const props = withDefaults(
     pitchPercent: number
     /** Beat deck: waveform seeks; sample deck: cues + scratch drag only. */
     enableWaveformSeek?: boolean
+    minPxPerSec?: number
+    /** When false, waveform playhead stays put until playback (avoids setTime storms). */
+    followPlayhead?: boolean
   }>(),
-  { enableWaveformSeek: true },
+  { enableWaveformSeek: true, followPlayhead: false },
 )
 
 const emit = defineEmits<{
@@ -59,6 +62,8 @@ const pitchModel = computed({
       :peaks="peaks"
       :duration="duration"
       :current-time="currentTime"
+      :follow-playhead="followPlayhead"
+      :min-px-per-sec="minPxPerSec"
       :enable-seek="enableWaveformSeek"
       @seek="emit('seek', $event)"
       @scratch-move="emit('scratchMove', $event)"
